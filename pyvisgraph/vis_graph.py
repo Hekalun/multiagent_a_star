@@ -28,9 +28,11 @@ from tqdm import tqdm
 from warnings import warn
 
 from pyvisgraph.graph import Graph, Edge
-from pyvisgraph.shortest_path import shortest_path
+from pyvisgraph.shortest_path import shortest_path,shortest_path_multi
 from pyvisgraph.visible_vertices import visible_vertices, point_in_polygon
 from pyvisgraph.visible_vertices import closest_point
+from heapdict import heapdict
+
 
 PYTHON3 = version_info[0] == 3
 if PYTHON3:
@@ -38,7 +40,6 @@ if PYTHON3:
     import pickle
 else:
     import cPickle as pickle
-
 
 class VisGraph(object):
 
@@ -128,6 +129,77 @@ class VisGraph(object):
             for v in visible_vertices(destination, self.graph, origin=orgn):
                 add_to_visg.add_edge(Edge(destination, v))
         return shortest_path(self.visgraph, origin, destination, add_to_visg)
+
+################################################################################################
+    def shortest_path_multi(self, origins, destinations):
+        """Find and return shortest path between origin and destination.
+
+        Will return in-order list of Points of the shortest path found. If
+        origin or destination are not in the visibility graph, their respective
+        visibility edges will be found, but only kept temporarily for finding
+        the shortest path. 
+        """
+        paths = dict()
+        zipped = dict(zip(destinations, origins))
+        counter = 0
+        add_to_visg = Graph([])
+
+        #check that all origins and destinations exist, if not, add them to the graph
+        for (destination, origin) in zipped.items():
+            
+            origin_exists = origin in self.visgraph
+            dest_exists = destination in self.visgraph
+            if origin_exists and dest_exists:
+                paths[destination] = [origin]
+                continue
+            orgn = None if origin_exists else origin
+            dest = None if dest_exists else destination
+            
+            if not origin_exists:
+                for v in visible_vertices(origin, self.graph, destination=dest):
+                    add_to_visg.add_edge(Edge(origin, v))
+            if not dest_exists:
+                for v in visible_vertices(destination, self.graph, origin=orgn):
+                    add_to_visg.add_edge(Edge(destination, v))
+
+            paths[destination] = [origin]
+
+        flag =0
+        start = True
+        g_dict = {}
+        f_dict = {}
+        while flag<5:
+            occupied = set()
+            counter = 0
+            for (destination, origin) in zipped.items():
+                if destination == origin:
+                    counter += 1
+                    continue
+
+                P,g_score, frontier = shortest_path_multi(self.visgraph, origin, destination, occupied,
+                           g_dict.get(destination,{}),f_dict.get(destination,heapdict()),add_to_visg, start)
+                g_dict[destination] = g_score
+                f_dict[destination] = frontier
+
+                if P != None:
+                    occupied.add(P)  
+                    zipped[destination] = P
+                    (paths[destination]).append(P)
+
+            start = False
+            if counter >= len(zipped):
+                break
+            flag +=1
+
+        res = []
+        for i in range(len(destinations)):
+            res.append(paths[destinations[i]])
+        return res
+
+
+    
+################################################################################################
+
 
     def point_in_polygon(self, point):
         """Return polygon_id if point in a polygon, -1 otherwise."""
