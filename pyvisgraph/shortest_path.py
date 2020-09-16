@@ -80,7 +80,7 @@ def a_star_multi(graph, agents, add_to_visgraph, heuristic=lambda x, y: 0):
         agents_copy.sort(reverse=True, key=lambda x: accum_dists[x[0]] + edge_distance(x[1], locations[x[0]]))
 
         # or comment this out for shuffle randomly
-        # random.shuffle(agents_copy)
+        #random.shuffle(agents_copy)
 
         for (origin, destination) in agents_copy:
 
@@ -122,17 +122,22 @@ def a_star_multi(graph, agents, add_to_visgraph, heuristic=lambda x, y: 0):
                     h = heuristic(w, destination)
 
                     # comment this block out for look_ahead heuristics:
-                    # nbs = neighbors(w, add_to_visgraph[w] | graph[w])
-                    # if destination not in nbs:
-                    #     turn = False
-                    #     for x in nbs:
-                    #         if destination in neighbors(x, add_to_visgraph[x] | graph[x]):
-                    #             turn = True
-                    #             break
-                    #     if turn:
-                    #         h *= 1.4
-                    #     else:
-                    #         h *= 2
+                    '''
+                    nbs = neighbors(w, add_to_visgraph[w] | graph[w])
+                    if destination not in nbs:
+                        turn = False
+                        for x in nbs:
+                            if destination in neighbors(x, add_to_visgraph[x] | graph[x]):
+                                turn = True
+                                break
+                        if turn:
+                            h *= 1.4
+                        else:
+                            h *= 2
+                    '''
+                    
+                        
+                            
 
                     frontier[w] = (new_score + h, w)
                     P[w] = v
@@ -151,8 +156,9 @@ def shortest_path_single(graph, origin, destination, add_to_visgraph=None, occup
     return path
 
 
-def shortest_path_parallel(graph, agents, add_to_visg=None):
-    Ps = a_star_multi(graph, agents, add_to_visg, edge_distance)
+def shortest_path_parallel(graph, agents, h, add_to_visg=None):
+    #Ps = a_star_multi(graph, agents, add_to_visg, edge_distance)
+    Ps = a_star_multi(graph, agents, add_to_visg, h)
     paths = []
 
     for (origin, destination) in agents:
@@ -169,6 +175,4 @@ def shortest_path_parallel(graph, agents, add_to_visg=None):
         path.reverse()
         paths.append(path)
     return paths
-
-
 

@@ -155,7 +155,7 @@ class VisGraph(object):
 
         return paths
 
-    def shortest_path_parallel(self, agents):
+    def shortest_path_parallel(self, agents,h=lambda x, y: 0):
         """
         Runs A* on all agents in parallel, with collision constraint.
         """
@@ -174,7 +174,7 @@ class VisGraph(object):
                 for v in visible_vertices(destination, self.graph, origin=orgn):
                     add_to_visg.add_edge(Edge(destination, v))
 
-        return shortest_path_parallel(self.visgraph, agents, add_to_visg)
+        return shortest_path_parallel(self.visgraph, agents, h,add_to_visg)
 
 
 ################################################################################################
